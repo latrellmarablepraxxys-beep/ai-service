@@ -1,0 +1,33 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: ai-mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: ai-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+
+  typesense:
+    image: typesense/typesense:27.1
+    container_name: ai-typesense
+    restart: unless-stopped
+    ports:
+      - '8108:8108'
+    volumes:
+      - typesense-data:/data
+    command: '--data-dir /data --api-key=dev-typesense-key --enable-cors'
+
+volumes:
+  mongo-data:
+  redis-data:
+  typesense-data:

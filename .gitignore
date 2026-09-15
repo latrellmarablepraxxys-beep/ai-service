@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+
+# Logs
+logs/
+*.log
+
+# Environment (never commit real secrets)
+.env
+.env.*
+!.env.example
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Husky internal
+.husky/_/
+
+# Local data
+data/
+
+# Local dev notes (not project docs)
+dev_docs/
+
+# Local tooling / index artifacts
+.codebase-index-store/
+.opencode/
