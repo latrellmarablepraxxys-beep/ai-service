@@ -17,4 +17,5 @@ export const createChatModel = (options: CreateChatModelOptions): ChatOpenAI =>
     configuration: { baseURL: options.config.baseUrl },
     ...(options.temperature !== undefined && { temperature: options.temperature }),
     ...(options.maxTokens !== undefined && { maxTokens: options.maxTokens }),
+    ...(options.responseFormat !== undefined && {modelKwargs: { response_format: { type: options.responseFormat } },}),
   });

@@ -1,6 +1,8 @@
 import type { ZodTypeAny } from 'zod';
 
 import type { HealthStatus } from './cache.js';
+import type { LlmProvider } from './llm.js';
+import type { Persistence } from './persistence.js';
 
 /** Probes a backing service; implementations come from each service client's `health()`. */
 export type HealthProbe = () => Promise<HealthStatus>;
@@ -32,15 +34,29 @@ export interface MetricsSnapshot {
   render: () => Promise<string>;
 }
 
+/** Overrides for the API-key middleware; unset falls back to env-backed config. */
+export interface ApiKeyAuthOptions {
+  keys?: readonly string[];
+}
+
+/** Symmetric counterpart to `ErrorResponse` for successful responses. */
+export interface SuccessResponse<T> {
+  success: true;
+  data: T;
+}
+
 /**
- * Runtime wiring for the HTTP app. Only health probes (and optionally a metrics
- * source) — everything else is resolved inside the route table.
+ * Runtime wiring for the HTTP app. Health probes (and optionally a metrics
+ * source) power the unprefixed routes; `persistence` and `llm` back the
+ * versioned admin API.
  */
 export interface AppDependencies {
   mongoHealth: HealthProbe;
   redisHealth: HealthProbe;
   typesenseHealth: HealthProbe;
   llmHealth: HealthProbe;
+  persistence: Persistence;
+  llm: LlmProvider;
   metrics?: MetricsSnapshot;
 }
 

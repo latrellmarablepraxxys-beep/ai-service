@@ -16,6 +16,10 @@ owns tickets, agents, and SLA.
 - **Ports (`src/interfaces/`):** type-only contracts (LLM, domain, persistence, search, cache) implemented by services and fakes.
 - **Persistence:** MongoDB repositories; Redis for jobs/cache.
 - **Jobs (BullMQ):** async routing / response / escalation.
+- **Mock admin API (dev only):** `src/mock/` mirrors the Laravel admin's `/api/v1`
+  (`health`, `motorcycles`, `branches`, `ai-response-templates`) with seeded data so the
+  service can be developed without the real admin. Runs standalone via `npm run mock:admin`
+  on `MOCK_ADMIN_API_PORT` (default 8000) — never mounted in this service's own app.
 
 ## Request flow
 

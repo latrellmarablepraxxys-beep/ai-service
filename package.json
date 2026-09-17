@@ -27,6 +27,7 @@
     "mongo:init": "npm run db:setup",
     "typesense:init": "tsx scripts/initTypesense.ts",
     "db:seed": "tsx scripts/seed.ts",
+    "mock:admin": "tsx scripts/mockAdminApi.ts",
     "prepare": "husky"
   },
   "dependencies": {

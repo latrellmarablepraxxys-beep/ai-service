@@ -72,6 +72,7 @@ docs/                     # architecture, environment, routes, testing
 
 ## Conventions
 - **ESM only** — `"type": "module"`; relative imports MUST use `.js` (e.g. `import { x } from './x.js'`).
+- **Imports — aliases in tests, relative in `src/`**: `src/` uses relative imports (`./`, `../`) so the compiled output runs without a path-rewrite step. Tests MUST import through the aliases declared in `tsconfig.json` + `vitest.config.ts` (`@api/`, `@config/`, `@enums/`, `@fakes/`, `@graph/`, `@interfaces/`, `@jobs/`, `@persistence/`, `@prompts/`, `@services/`, `@utils/`, `@src/`) — never `../` chains. Test fakes live in `tests/fakes/` and are imported as `@fakes/<file>.js`.
 - **Strict TypeScript** — no `any` (warned); prefer `unknown` + Zod at boundaries.
 - **Validate every external input** (webhooks, LLM output, Laravel responses) with Zod. HTTP validators live in `src/api/http/validators/XValidator.ts` (see `docs/validation.md`).
 - **Naming**: layer files PascalCase = primary export/concern (`src/services/`, `src/api/**/{controllers,validators,middleware,sse}/`, `src/persistence/`, `src/enums/`, `src/graph/`, `src/prompts/`); `src/config/`, `src/interfaces/`, `src/utils/`, `src/api/http/routes.ts`, `scripts/`, `tests/` stay camelCase; factories `create*`/`build*`; types PascalCase + role suffix (`Options`/`Input`/`Response`/`Body`). Full table in `docs/conventions.md`.

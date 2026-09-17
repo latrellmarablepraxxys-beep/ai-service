@@ -11,6 +11,7 @@ export default defineConfig({
       '@api/':         src('api/'),
       '@config/':      src('config/'),
       '@enums/':       src('enums/'),
+      '@fakes/':       src('../tests/fakes/'),
       '@graph/':       src('graph/'),
       '@interfaces/':  src('interfaces/'),
       '@jobs/':        src('jobs/'),

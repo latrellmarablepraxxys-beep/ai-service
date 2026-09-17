@@ -3,6 +3,7 @@ import {
 } from '@langchain/core/messages';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
+import { z } from 'zod';
 
 import type { AiProviderConfig } from '../../interfaces/aiProvider.js';
 import type { HealthStatus } from '../../interfaces/cache.js';
@@ -14,11 +15,14 @@ import type {
   ClassifyResponse,
   CreateChatModelOptions,
   CreateEmbeddingModelOptions,
+  DetectLanguageRequest,
+  DetectLanguageResponse,
   FinishReason,
   LlmErrorCode,
   LlmProvider,
   TokenUsage,
 } from '../../interfaces/llm.js';
+import { buildLanguageDetectorMessages } from '../../prompts/LanguageDetector.js';
 import { AppError, isAppError } from '../../utils/errors.js';
 import { logger } from '../../utils/logger.js';
 import { createChatModel } from './ChatModel.js';
@@ -26,6 +30,27 @@ import { createEmbeddingModel } from './EmbeddingModel.js';
 
 const extractContent = (content: unknown): string =>
   typeof content === 'string' ? content : JSON.stringify(content);
+
+/** Pulls the first JSON object out of a model reply, tolerating ```json fences. */
+const extractJsonObject = (content: string): unknown => {
+  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(content);
+  const candidate = (fenced?.[1] ?? content).trim();
+  try {
+    return JSON.parse(candidate) as unknown;
+  } catch {
+    // Unparseable output is an invalid response, not a transport failure.
+    return undefined;
+  }
+};
+
+const languageDetectionSchema = z.object({
+  language: z.enum([
+    'English',
+    'Tagalog',
+    'Taglish'
+  ]),
+  confidence: z.number().min(0).max(1),
+});
 
 const toFinishReason = (value: unknown): FinishReason =>
   value === 'stop' || value === 'length' || value === 'tool_calls' || value === 'content_filter'
@@ -126,6 +151,7 @@ const chatModelKey = (options: CreateChatModelOptions): string =>
     options.model ?? options.config.models.chat,
     options.temperature ?? null,
     options.maxTokens ?? null,
+    options.responseFormat ?? null,
   ]);
 
 const embeddingModelKey = (options: CreateEmbeddingModelOptions): string =>
@@ -278,6 +304,42 @@ export const createLlmProvider = (config: AiProviderConfig): LlmProvider => {
     // eslint-disable-next-line @typescript-eslint/require-await
     async classify(_request: ClassifyRequest): Promise<ClassifyResponse> {
       throw new AppError('LLM_REQUEST_FAILED', 501, 'classify is not implemented yet');
+    },
+
+    async detectLanguage(request: DetectLanguageRequest): Promise<DetectLanguageResponse> {
+      const model = getChatModel({
+        config,
+        model: request.model ?? config.models.classifier,
+        temperature: 0,
+        responseFormat: 'json_object',
+      });
+
+      try {
+        const detectorMessages = buildLanguageDetectorMessages({
+          text: request.text,
+          ...(request.context !== undefined && { context: request.context }),
+        });
+        const callOptions = request.signal !== undefined ? { signal: request.signal } : {};
+        const result = await model.invoke(buildMessages(detectorMessages), callOptions);
+
+        const parsed = languageDetectionSchema.safeParse(
+          extractJsonObject(extractContent(result.content)),
+        );
+        if (!parsed.success) {
+          throw new AppError(
+            'LLM_INVALID_RESPONSE',
+            502,
+            'Language detection returned an invalid response',
+          );
+        }
+
+        return {
+          language: parsed.data.language,
+          confidence: parsed.data.confidence,
+        };
+      } catch (error) {
+        throw toLlmError(error, 'LLM language detection failed', request.signal);
+      }
     },
   };
 };

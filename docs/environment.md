@@ -22,6 +22,7 @@ Start them: `docker compose up -d`
 | `DOMAIN_API_URL` | domain admin API base URL (tickets/agents/SLA) |
 | `DOMAIN_API_KEY` | service key sent as `X-Api-Key` |
 | `DOMAIN_API_TIMEOUT_MS` | request timeout |
+| `AI_API_KEYS` | comma-separated API keys accepted on `/api/v1` (admin app sends one as `X-Api-Key`); required in production |
 | `AI_PROVIDER` | active provider selector (`openai` | `ollama` | `novita`, default `openai`) |
 | `OPENAI_BASE_URL` / `OPENAI_API_KEY` / `OPENAI_CHAT_MODEL` / `OPENAI_CLASSIFIER_MODEL` / `OPENAI_EMBEDDING_MODEL` | openai overrides (empty → preset) |
 | `OLLAMA_BASE_URL` / `OLLAMA_API_KEY` / `OLLAMA_CHAT_MODEL` / `OLLAMA_CLASSIFIER_MODEL` / `OLLAMA_EMBEDDING_MODEL` | ollama overrides (empty → preset; no key needed) |
@@ -46,6 +47,7 @@ Start them: `docker compose up -d`
 | `TYPESENSE_CONNECTION_TIMEOUT_SECONDS` | Typesense client connection timeout (default 5) |
 | `WEBHOOK_VERIFY_TOKEN` | webhook verification token — optional (required once the webhook route lands) |
 | `WEBHOOK_SIGNING_SECRET` | webhook HMAC signing secret — optional (required once the webhook route lands) |
+| `MOCK_ADMIN_API_PORT` | dev-only mock admin API port (default 8000); start with `npm run mock:admin` |
 | `LOG_LEVEL` / `LOG_DIR` | logging |
 | `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` | rate limiting |
 

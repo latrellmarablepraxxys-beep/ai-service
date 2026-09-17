@@ -7,7 +7,14 @@ import type {
   HealthState,
   MetricsSnapshot,
 } from '../../interfaces/http.js';
+import { createConversationService } from '../../services/conversation/ConversationService.js';
 import { getMetrics, metrics } from '../../utils/metrics.js';
+import { createConversationController } from './controllers/ConversationController.js';
+import { createApiKeyAuth } from './middleware/ApiKeyAuth.js';
+import {
+  validateConversationBody,
+  validateConversationParams,
+} from './validators/ConversationValidator.js';
 
 const defaultMetricsSnapshot: MetricsSnapshot = {
   contentType: metrics.register.contentType,
@@ -69,6 +76,26 @@ export const createHttpRouter = (dependencies: AppDependencies): Router => {
     async (_req, res) => {
       res.type(metricsSnapshot.contentType).send(await metricsSnapshot.render());
     });
+
+  return router;
+};
+
+/**
+ * Versioned admin API mounted at `/api/v1`. Every route is guarded by the
+ * shared API key; callers are the MotorCentral admin app (server-to-server).
+ */
+export const createV1Router = (dependencies: AppDependencies): Router => {
+  const router = Router();
+  const conversationService = createConversationService({
+    persistence: dependencies.persistence,
+    llm: dependencies.llm,
+  });
+
+  router.post('/tickets/:ticketId/conversations',
+    createApiKeyAuth(),
+    validateConversationParams,
+    validateConversationBody,
+    createConversationController({ conversationService }));
 
   return router;
 };

@@ -5,6 +5,7 @@ import { appConfig } from './config/app.js';
 import { aiProvider } from './config/aiProviders.js';
 import type { HealthStatus } from './interfaces/cache.js';
 import type { AppDependencies } from './interfaces/http.js';
+import { createMongoPersistence } from './persistence/MongoPersistence.js';
 import { createRedisCacheClient } from './services/cache/RedisCacheClient.js';
 import { createLlmProvider } from './services/llm/LlmProvider.js';
 import { createMongoConnection } from './services/mongodb/MongoConnection.js';
@@ -71,6 +72,7 @@ const start = async (): Promise<void> => {
   logger.info('connections established');
 
   const cache = createRedisCacheClient({ client: cacheRedis.getClient() });
+  const persistence = createMongoPersistence({ connection: mongo });
 
   /**
    * Redis is split into two profiles: the cache connection bounds retries so
@@ -104,6 +106,8 @@ const start = async (): Promise<void> => {
     redisHealth,
     typesenseHealth: () => typesense.health(),
     llmHealth: () => llm.health(),
+    persistence,
+    llm,
   };
 
   const app = buildExpressApp(dependencies);

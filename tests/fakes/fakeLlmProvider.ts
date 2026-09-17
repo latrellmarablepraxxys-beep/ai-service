@@ -6,6 +6,8 @@ import type {
   ChatStreamChunk,
   ClassifyRequest,
   ClassifyResponse,
+  DetectLanguageRequest,
+  DetectLanguageResponse,
   LlmProvider,
   TokenUsage,
 } from '@interfaces/llm.js';
@@ -17,6 +19,7 @@ export interface FakeLlmProviderOptions {
   chatResponse?: Partial<ChatResponse>;
   streamChunks?: string[];
   classifyResult?: ClassifyResponse;
+  detectLanguageResult?: DetectLanguageResponse;
 }
 
 const DEFAULT_USAGE: TokenUsage = {
@@ -56,6 +59,7 @@ export class FakeLlmProvider implements LlmProvider {
   private readonly chatResponse: ChatResponse;
   private readonly streamChunks: string[];
   private readonly classifyResult: ClassifyResponse;
+  private readonly detectLanguageResult: DetectLanguageResponse;
 
   constructor(options: FakeLlmProviderOptions) {
     this.config = options.config;
@@ -75,6 +79,10 @@ export class FakeLlmProvider implements LlmProvider {
       route: 'ai',
       confidence: 0.9,
       reasoning: 'fake classification',
+    };
+    this.detectLanguageResult = options.detectLanguageResult ?? {
+      language: 'Tagalog',
+      confidence: 0.9,
     };
   }
 
@@ -103,6 +111,10 @@ export class FakeLlmProvider implements LlmProvider {
 
   classify(_request: ClassifyRequest): Promise<ClassifyResponse> {
     return Promise.resolve(this.classifyResult);
+  }
+
+  detectLanguage(_request: DetectLanguageRequest): Promise<DetectLanguageResponse> {
+    return Promise.resolve(this.detectLanguageResult);
   }
 
   embed(texts: string[]): Promise<number[][]> {

@@ -22,6 +22,8 @@ describe('loadEnv',
         expect(env.TYPESENSE_CONNECTION_TIMEOUT_SECONDS).toBe(5);
         expect(env.REDIS_COMMAND_TIMEOUT_MS).toBe(2000);
         expect(env.RATE_LIMIT_WINDOW_MS).toBe(60_000);
+        expect(env.AI_API_KEYS).toBe('');
+        expect(env.MOCK_ADMIN_API_PORT).toBe(8000);
       });
 
     it('coerces numeric strings',
@@ -73,6 +75,7 @@ describe('loadEnv',
           AI_PROVIDER: 'ollama',
           DOMAIN_API_KEY: 'domain-key',
           TYPESENSE_API_KEY: 'typesense-key',
+          AI_API_KEYS: 'ai-key',
         });
 
         expect(env.AI_PROVIDER).toBe('ollama');
@@ -85,6 +88,7 @@ describe('loadEnv',
           OPENAI_API_KEY: 'ai-key',
           DOMAIN_API_KEY: 'domain-key',
           TYPESENSE_API_KEY: 'typesense-key',
+          AI_API_KEYS: 'admin-key',
         });
 
         expect(env.NODE_ENV).toBe('production');
@@ -100,6 +104,7 @@ describe('loadEnv',
             OPENAI_API_KEY: 'ai-key',
             DOMAIN_API_KEY: '   ',
             TYPESENSE_API_KEY: 'typesense-key',
+            AI_API_KEYS: 'admin-key',
           }),
         ).toThrow(/DOMAIN_API_KEY/);
 
@@ -109,8 +114,19 @@ describe('loadEnv',
             OPENAI_API_KEY: 'ai-key',
             DOMAIN_API_KEY: 'domain-key',
             TYPESENSE_API_KEY: '   ',
+            AI_API_KEYS: 'admin-key',
           }),
         ).toThrow(/TYPESENSE_API_KEY/);
+
+        expect(() =>
+          loadEnv({
+            NODE_ENV: 'production',
+            OPENAI_API_KEY: 'ai-key',
+            DOMAIN_API_KEY: 'domain-key',
+            TYPESENSE_API_KEY: 'typesense-key',
+            AI_API_KEYS: '   ',
+          }),
+        ).toThrow(/AI_API_KEYS/);
 
         expect(() =>
           loadEnv({
@@ -118,6 +134,7 @@ describe('loadEnv',
             AI_PROVIDER: 'novita',
             DOMAIN_API_KEY: 'domain-key',
             TYPESENSE_API_KEY: 'typesense-key',
+            AI_API_KEYS: 'admin-key',
           }),
         ).toThrow(/NOVITA_API_KEY/);
       });

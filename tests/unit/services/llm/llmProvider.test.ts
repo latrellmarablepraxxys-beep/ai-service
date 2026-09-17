@@ -773,6 +773,81 @@ describe('llmProvider',
           });
       });
 
+    describe('detectLanguage()',
+      () => {
+        it('binds the classifier model with JSON output',
+          async () => {
+            const provider = createLlmProvider(config);
+            mocks.chatModel.invoke.mockResolvedValue({
+              content: '{"language":"English","confidence":0.5}',
+              response_metadata: { finish_reason: 'stop' },
+            });
+
+            await provider.detectLanguage({ text: 'hello' });
+
+            expect(ChatModelMock).toHaveBeenCalledWith(expect.objectContaining({
+              model: 'classifier-model-v1',
+              responseFormat: 'json_object',
+            }));
+          });
+
+        it('returns the parsed language and confidence',
+          async () => {
+            const provider = createLlmProvider(config);
+            mocks.chatModel.invoke.mockResolvedValue({
+              content: '{"language":"Tagalog","confidence":0.9}',
+              response_metadata: { finish_reason: 'stop' },
+            });
+
+            await expect(provider.detectLanguage({ text: 'Magkano po?' })).resolves.toEqual({
+              language: 'Tagalog',
+              confidence: 0.9,
+            });
+          });
+
+        it('parses a fenced JSON reply',
+          async () => {
+            const provider = createLlmProvider(config);
+            mocks.chatModel.invoke.mockResolvedValue({
+              content: '```json\n{"language":"Taglish","confidence":0.7}\n```',
+              response_metadata: { finish_reason: 'stop' },
+            });
+
+            await expect(provider.detectLanguage({ text: 'sige po' })).resolves.toEqual({
+              language: 'Taglish',
+              confidence: 0.7,
+            });
+          });
+
+        it('rejects with LLM_INVALID_RESPONSE when the reply is not valid JSON',
+          async () => {
+            const provider = createLlmProvider(config);
+            mocks.chatModel.invoke.mockResolvedValue({
+              content: 'not json',
+              response_metadata: { finish_reason: 'stop' },
+            });
+
+            await expect(provider.detectLanguage({ text: 'hi' })).rejects.toMatchObject({
+              code: 'LLM_INVALID_RESPONSE',
+              status: 502,
+            });
+          });
+
+        it('rejects with LLM_INVALID_RESPONSE when the language is not allowed',
+          async () => {
+            const provider = createLlmProvider(config);
+            mocks.chatModel.invoke.mockResolvedValue({
+              content: '{"language":"Cebuano","confidence":0.9}',
+              response_metadata: { finish_reason: 'stop' },
+            });
+
+            await expect(provider.detectLanguage({ text: 'hi' })).rejects.toMatchObject({
+              code: 'LLM_INVALID_RESPONSE',
+              status: 502,
+            });
+          });
+      });
+
     describe('classify()',
       () => {
         it('is not implemented yet — rejects with 501',

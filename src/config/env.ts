@@ -28,6 +28,9 @@ const schema = z
     DOMAIN_API_KEY: z.string().default(''),
     DOMAIN_API_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
 
+    // Comma-separated API keys the admin app presents as `X-Api-Key`.
+    AI_API_KEYS: z.string().default(''),
+
     AI_PROVIDER: z.enum([
       'openai',
       'ollama',
@@ -88,6 +91,9 @@ const schema = z
     WEBHOOK_VERIFY_TOKEN: z.string().default(''),
     WEBHOOK_SIGNING_SECRET: z.string().default(''),
 
+    // Dev tooling: mock of the Laravel admin's /api/v1 (see scripts/mockAdminApi.ts).
+    MOCK_ADMIN_API_PORT: z.coerce.number().int().positive().default(8000),
+
     LOG_LEVEL: z
       .enum([
         'fatal',
@@ -130,6 +136,7 @@ const schema = z
     const requiredInProduction = {
       DOMAIN_API_KEY: values.DOMAIN_API_KEY,
       TYPESENSE_API_KEY: values.TYPESENSE_API_KEY,
+      AI_API_KEYS: values.AI_API_KEYS,
     } as const;
 
     for (const [

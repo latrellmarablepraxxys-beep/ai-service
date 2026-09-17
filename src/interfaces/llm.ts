@@ -69,11 +69,26 @@ export interface ClassifyResponse {
   reasoning: string | undefined;
 }
 
+export type DetectedLanguage = 'English' | 'Tagalog' | 'Taglish';
+
+export interface DetectLanguageRequest {
+  text: string;
+  context?: string;
+  model?: string;
+  signal?: AbortSignal;
+}
+
+export interface DetectLanguageResponse {
+  language: DetectedLanguage;
+  confidence: number;
+}
+
 export interface LlmProvider {
   config: AiProviderConfig;
   chat(request: ChatRequest): Promise<ChatResponse>;
   chatStream(request: ChatRequest): AsyncIterable<ChatStreamChunk>;
   classify(request: ClassifyRequest): Promise<ClassifyResponse>;
+  detectLanguage(request: DetectLanguageRequest): Promise<DetectLanguageResponse>;
   embed(texts: string[]): Promise<number[][]>;
   health(): Promise<HealthStatus>;
 }
@@ -84,6 +99,8 @@ export interface CreateChatModelOptions {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  /** When set, requests JSON output (OpenAI-compatible `response_format`). */
+  responseFormat?: 'json_object';
 }
 
 /** Options for the LangChain embeddings model factory (`src/services/llm/embeddingModel.ts`). */

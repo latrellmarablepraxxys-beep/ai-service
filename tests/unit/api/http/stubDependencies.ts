@@ -1,3 +1,6 @@
+import { fakeAiProviderConfig } from '@fakes/fakeAiProviderConfig.js';
+import { FakeLlmProvider } from '@fakes/fakeLlmProvider.js';
+import { FakePersistence } from '@fakes/fakePersistence.js';
 import type { HealthStatus } from '@interfaces/cache.js';
 import type { AppDependencies, HealthProbe } from '@interfaces/http.js';
 
@@ -18,5 +21,7 @@ export const stubDependencies = (overrides: Partial<AppDependencies> = {}): AppD
   redisHealth: stubProbe(healthStatus()),
   typesenseHealth: stubProbe(healthStatus()),
   llmHealth: stubProbe(healthStatus()),
+  persistence: new FakePersistence(),
+  llm: new FakeLlmProvider({ config: fakeAiProviderConfig }),
   ...overrides,
 });
