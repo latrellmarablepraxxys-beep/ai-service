@@ -24,7 +24,12 @@ based on the conversation.
 | `npm test` / `test:watch` / `test:coverage` | Vitest |
 | `npm run verify` | `typecheck` + `lint` + `test` |
 | `npm run llm:smoke` | smoke-test the configured LLM provider |
-| `npm run mongo:init` | create Mongo collections + indexes |
+| `npm run db:init-collections` | create the service-owned Mongo collections (idempotent) |
+| `npm run db:create-indexes` | ensure Mongo collection indexes (idempotent) |
+| `npm run db:setup` | collections + indexes (`db:init-collections && db:create-indexes`) |
+| `npm run db:clear` | delete all documents (keeps schema/indexes) — needs `-- --force` |
+| `npm run db:fresh` | drop + recreate collections + indexes — needs `-- --force` |
+| `npm run mongo:init` | alias of `db:setup` (collections + indexes) |
 | `npm run typesense:init` | create Typesense collections |
 | `npm run db:seed` | seed local data |
 

@@ -1,7 +1,6 @@
-import type { Db, WithId } from 'mongodb';
+import type { Db } from 'mongodb';
 
 import { ThreadStatus } from '../../enums/ThreadStatus.js';
-import type { ThreadDocument } from '../../interfaces/mongo.js';
 import type {
   CreateThreadInput,
   EntityId,
@@ -9,7 +8,9 @@ import type {
   ThreadRepository,
   UpdateThreadInput,
 } from '../../interfaces/persistence.js';
-import { COLLECTIONS } from '../models/Collections.js';
+import {
+  THREAD_COLLECTION, toThread, toThreadDocument, type ThreadDocument 
+} from '../models/Thread.js';
 import {
   notFoundError,
   nowIso,
@@ -20,17 +21,7 @@ import {
 } from './Helpers.js';
 
 export const createThreadRepository = (db: Db): ThreadRepository => {
-  const threads = db.collection<ThreadDocument>(COLLECTIONS.threads);
-
-  const toThread = (doc: WithId<ThreadDocument>): Thread => {
-    const {
-      _id, ...rest 
-    } = doc;
-    return {
-      id: _id.toString(),
-      ...rest,
-    };
-  };
+  const threads = db.collection<ThreadDocument>(THREAD_COLLECTION);
 
   return {
     async create(input: CreateThreadInput): Promise<Thread> {
@@ -45,10 +36,11 @@ export const createThreadRepository = (db: Db): ThreadRepository => {
       };
 
       try {
-        const result = await threads.insertOne(doc);
+        const document = toThreadDocument(doc);
+        const result = await threads.insertOne(document);
         return {
           id: result.insertedId.toString(),
-          ...doc 
+          ...document 
         };
       } catch (error) {
         throw toPersistenceError(error, `Failed to create thread for ticket "${input.ticketId}"`);

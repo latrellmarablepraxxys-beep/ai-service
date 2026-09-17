@@ -1,17 +1,6 @@
 import type { Db, MongoClient } from 'mongodb';
 
-import type {
-  HealthStatus, Memory, Message, Run, Thread 
-} from './persistence.js';
-
-/**
- * Stored document shapes: identical to the port entities, except the boundary
- * `id` lives in MongoDB's `_id` (mapped inside the repositories).
- */
-export type ThreadDocument = Omit<Thread, 'id'>;
-export type MessageDocument = Omit<Message, 'id'>;
-export type MemoryDocument = Omit<Memory, 'id'>;
-export type RunDocument = Omit<Run, 'id'>;
+import type { HealthStatus } from './persistence.js';
 
 /**
  * Collection names this service owns. The values themselves live in

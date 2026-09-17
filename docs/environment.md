@@ -56,11 +56,13 @@ nvm use                 # Node 22
 npm install
 cp .env.example .env    # fill in values
 docker compose up -d
-npm run mongo:init
+npm run db:setup        # create service-owned collections + indexes (idempotent)
 npm run dev             # http://localhost:3001
 ```
 
 > `npm run typesense:init` (`scripts/initTypesense.ts`) and `npm run db:seed` (`scripts/seed.ts`) are wired and implemented. The search index is shared with the Laravel admin, so Typesense provisioning remains optional today.
+
+> Resets: `npm run db:clear -- --force` deletes all documents (keeps collections + indexes); `npm run db:fresh -- --force` drops and recreates the 4 collections with indexes. Both are destructive and refuse to run under `NODE_ENV=production`.
 
 ## Notes
 

@@ -19,7 +19,7 @@ const runDoc = (id: ObjectId, threadId: string, startedAt: string) => ({
   _id: id,
   threadId,
   type: 'routing',
-  status: 'completed',
+  status: RunStatus.Completed,
   input: {},
   startedAt,
 });

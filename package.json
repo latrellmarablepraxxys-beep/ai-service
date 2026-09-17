@@ -18,7 +18,12 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "llm:smoke": "tsx scripts/llmSmoke.ts",
-    "mongo:init": "tsx scripts/initMongo.ts",
+    "db:init-collections": "tsx scripts/initCollections.ts",
+    "db:create-indexes": "tsx scripts/createIndexes.ts",
+    "db:setup": "npm run db:init-collections && npm run db:create-indexes",
+    "db:clear": "tsx scripts/clearDatabase.ts",
+    "db:fresh": "tsx scripts/freshDatabase.ts",
+    "mongo:init": "npm run db:setup",
     "typesense:init": "tsx scripts/initTypesense.ts",
     "db:seed": "tsx scripts/seed.ts",
     "prepare": "husky"

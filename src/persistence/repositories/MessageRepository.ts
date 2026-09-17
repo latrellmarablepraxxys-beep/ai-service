@@ -1,13 +1,14 @@
-import type { Db, WithId } from 'mongodb';
+import type { Db } from 'mongodb';
 
-import type { MessageDocument } from '../../interfaces/mongo.js';
 import type {
   CreateMessageInput,
   EntityId,
   Message,
   MessageRepository,
 } from '../../interfaces/persistence.js';
-import { COLLECTIONS } from '../models/Collections.js';
+import {
+  MESSAGE_COLLECTION, toMessage, toMessageDocument, type MessageDocument 
+} from '../models/Message.js';
 import {
   nowIso,
   resolvePagination,
@@ -17,18 +18,7 @@ import {
 } from './Helpers.js';
 
 export const createMessageRepository = (db: Db): MessageRepository => {
-  const messages = db.collection<MessageDocument>(COLLECTIONS.messages);
-
-  const toMessage = (doc: WithId<MessageDocument>): Message => {
-    const {
-      _id, ...rest 
-    } = doc;
-    return {
-      id: _id.toString(),
-      ...rest,
-      tokenCount: rest.tokenCount ?? undefined 
-    };
-  };
+  const messages = db.collection<MessageDocument>(MESSAGE_COLLECTION);
 
   return {
     async create(input: CreateMessageInput): Promise<Message> {
@@ -44,10 +34,12 @@ export const createMessageRepository = (db: Db): MessageRepository => {
       } as MessageDocument;
 
       try {
-        const result = await messages.insertOne(doc);
+        const document = toMessageDocument(doc);
+        const result = await messages.insertOne(document);
         return {
           id: result.insertedId.toString(),
-          ...doc 
+          ...document,
+          tokenCount: document.tokenCount ?? undefined,
         };
       } catch (error) {
         throw toPersistenceError(error, `Failed to create message for thread "${input.threadId}"`);

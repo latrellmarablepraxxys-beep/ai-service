@@ -18,7 +18,7 @@ precedent in the right-hand column.
 | support source file (`src/config/`, `src/interfaces/`, `src/utils/`, `src/api/http/routes.ts`) | camelCase, named after its primary export/concern | `env.ts`, `errors.ts`, `routes.ts` | `src/config/env.ts` |
 | test file | camelCase `<subject>.test.ts`, mirroring the `src/` concern path | `validate.test.ts`, `threadStatus.test.ts` | `tests/unit/api/http/validators/validate.test.ts` |
 | fake/stub helper in tests | camelCase, no `.test.ts` suffix | `stubDependencies.ts`, `fakeMongo.ts` | `tests/unit/api/http/stubDependencies.ts` |
-| source script | camelCase under `scripts/`, named after the operation | `initMongo.ts`, `seed.ts` | `scripts/initMongo.ts` |
+| source script | camelCase under `scripts/`, named after the operation | `initCollections.ts`, `seed.ts` | `scripts/initCollections.ts` |
 | shared test fake | camelCase under `tests/fakes/`; exempt from the `src/` mirror path | `fakeLlmProvider.ts` | `tests/fakes/fakeLlmProvider.ts` |
 | cross-cutting test | may span several concerns instead of mirroring one `src/` file | `enumSerialization.test.ts` | `tests/unit/enums/enumSerialization.test.ts` |
 
@@ -58,6 +58,8 @@ Sanctioned exemptions:
   and export their own `typeof`-derived type next to the value.
 - `z.infer` DTOs stay next to their schema in the validator file (`SendMessageBody`,
   `PaginationQuery`) — the schema is the source of truth.
+- Document shapes + Zod schemas for MongoDB own-state live in
+  `src/persistence/models/<Entity>.ts` (implementation files), not `src/interfaces/`.
 - Hand-written shared contracts go in `src/interfaces/`.
 
 ## Zod schemas
@@ -93,11 +95,13 @@ values, not constants.
 
 - Field names camelCase and mirror the port entities in `src/interfaces/persistence.ts`
   (`ticketId`, `threadId`, `tokenCount`, `createdAt`, `updatedAt`, `perPage`, `hasNextPage`).
-- The boundary `id` is stored as MongoDB `_id` and mapped inside repositories
-  (`src/interfaces/mongo.ts:9`).
+- Each entity's document shape (`ThreadDocument`, `MessageDocument`, …), Zod schema, collection
+  name, indexes and `_id` → `id` mapper live together in `src/persistence/models/<Entity>.ts`;
+  repositories consume those exports instead of declaring shapes locally.
 - Collection names are lowercase plural (`threads`, `messages`, `memories`, `runs`) and registered
-  once in `src/persistence/models/Collections.ts:11`.
-- Documents are `Omit<Entity, 'id'>` (`src/interfaces/mongo.ts:9`).
+  once in `src/persistence/models/collections.ts`.
+- The boundary `id` is stored as MongoDB `_id`; the per-entity read mapper (`to<Entity>`) lifts it
+  back to the string `id`, so documents themselves are `Omit<Entity, 'id'>`.
 
 ## Laravel domain payloads
 

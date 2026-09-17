@@ -1,7 +1,6 @@
-import type { Db, WithId } from 'mongodb';
+import type { Db } from 'mongodb';
 
 import { RunStatus } from '../../enums/RunStatus.js';
-import type { RunDocument } from '../../interfaces/mongo.js';
 import type {
   CreateRunInput,
   EntityId,
@@ -9,7 +8,9 @@ import type {
   RunRepository,
   UpdateRunInput,
 } from '../../interfaces/persistence.js';
-import { COLLECTIONS } from '../models/Collections.js';
+import {
+  RUN_COLLECTION, toRun, toRunDocument, type RunDocument 
+} from '../models/Run.js';
 import {
   notFoundError,
   nowIso,
@@ -20,20 +21,7 @@ import {
 } from './Helpers.js';
 
 export const createRunRepository = (db: Db): RunRepository => {
-  const runs = db.collection<RunDocument>(COLLECTIONS.runs);
-
-  const toRun = (doc: WithId<RunDocument>): Run => {
-    const {
-      _id, ...rest 
-    } = doc;
-    return {
-      id: _id.toString(),
-      ...rest,
-      output: rest.output ?? undefined,
-      error: rest.error ?? undefined,
-      completedAt: rest.completedAt ?? undefined,
-    };
-  };
+  const runs = db.collection<RunDocument>(RUN_COLLECTION);
 
   return {
     async create(input: CreateRunInput): Promise<Run> {
@@ -49,10 +37,11 @@ export const createRunRepository = (db: Db): RunRepository => {
       } as RunDocument;
 
       try {
-        const result = await runs.insertOne(doc);
+        const document = toRunDocument(doc);
+        const result = await runs.insertOne(document);
         return {
           id: result.insertedId.toString(),
-          ...doc,
+          ...document,
           output: undefined,
           error: undefined,
           completedAt: undefined,

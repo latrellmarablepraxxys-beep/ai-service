@@ -1,6 +1,5 @@
-import type { Db, WithId } from 'mongodb';
+import type { Db } from 'mongodb';
 
-import type { MemoryDocument } from '../../interfaces/mongo.js';
 import type {
   EntityId,
   Memory,
@@ -8,21 +7,13 @@ import type {
   UpsertMemoryInput,
 } from '../../interfaces/persistence.js';
 import { AppError } from '../../utils/errors.js';
-import { COLLECTIONS } from '../models/Collections.js';
+import {
+  MEMORY_COLLECTION, toMemory, type MemoryDocument 
+} from '../models/Memory.js';
 import { nowIso, toPersistenceError } from './Helpers.js';
 
 export const createMemoryRepository = (db: Db): MemoryRepository => {
-  const memories = db.collection<MemoryDocument>(COLLECTIONS.memories);
-
-  const toMemory = (doc: WithId<MemoryDocument>): Memory => {
-    const {
-      _id, ...rest 
-    } = doc;
-    return {
-      id: _id.toString(),
-      ...rest 
-    };
-  };
+  const memories = db.collection<MemoryDocument>(MEMORY_COLLECTION);
 
   return {
     async upsert(input: UpsertMemoryInput): Promise<Memory> {
