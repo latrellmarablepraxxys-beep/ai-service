@@ -27,6 +27,7 @@ based on the conversation.
 | `npm run db:init-collections` | create the service-owned Mongo collections (idempotent) |
 | `npm run db:create-indexes` | ensure Mongo collection indexes (idempotent) |
 | `npm run db:setup` | collections + indexes (`db:init-collections && db:create-indexes`) |
+| `npm run db:ping` | check MongoDB connectivity (exit non-zero when unreachable) |
 | `npm run db:clear` | delete all documents (keeps schema/indexes) — needs `-- --force` |
 | `npm run db:fresh` | drop + recreate collections + indexes — needs `-- --force` |
 | `npm run mongo:init` | alias of `db:setup` (collections + indexes) |
