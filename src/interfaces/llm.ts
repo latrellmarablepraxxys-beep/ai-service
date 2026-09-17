@@ -27,6 +27,7 @@ export interface ChatRequest {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  responseFormat?: 'json_object' | undefined;
   signal?: AbortSignal;
 }
 

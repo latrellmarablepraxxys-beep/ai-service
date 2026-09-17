@@ -1,10 +1,8 @@
+import type { AiAttachment } from './decision.js';
 import type { TicketRoute } from './domain.js';
-import type {
-  DetectedLanguage, LlmProvider, TokenUsage 
-} from './llm.js';
-import type { MessageRole, Persistence } from './persistence.js';
-
-export type ConversationAttachmentKind = 'image' | 'file';
+import type {DetectedLanguage, TokenUsage} from './llm.js';
+import type { MessageRole } from './persistence.js';
+import type { TurnPipeline } from './turn.js';
 
 export interface InboundAttachment {
   type: string;
@@ -29,18 +27,12 @@ export interface ConversationRequest {
   customer?: InboundCustomer | undefined;
 }
 
-export interface ConversationMedia {
-  kind: ConversationAttachmentKind;
-  url: string;
-  name?: string | undefined;
-}
-
 /** Internal result of a conversation turn. Serialized to the wire by the controller. */
 export interface ConversationResult {
   reply: string;
   replyToExternalId: string | null;
-  transferToAgent: null;
-  media: ConversationMedia | null;
+  transferToAgent: boolean;
+  attachments: AiAttachment[];
   route: TicketRoute;
   aiRouted: boolean;
   language: DetectedLanguage | null;
@@ -51,8 +43,8 @@ export interface ConversationResult {
 export interface ConversationResponseData {
   reply: string;
   reply_to_external_id: string | null;
-  transfer_to_agent: null;
-  media: ConversationMedia | null;
+  transfer_to_agent: boolean;
+  attachments: AiAttachment[];
   route: TicketRoute;
   ai_routed: boolean;
   language: DetectedLanguage | null;
@@ -73,6 +65,5 @@ export interface ConversationService {
 }
 
 export interface ConversationServiceOptions {
-  persistence: Persistence;
-  llm: LlmProvider;
+  pipeline: TurnPipeline;
 }

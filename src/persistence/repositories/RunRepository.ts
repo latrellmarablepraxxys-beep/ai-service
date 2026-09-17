@@ -72,6 +72,12 @@ export const createRunRepository = (db: Db): RunRepository => {
       if (input.output !== undefined) $set.output = input.output;
       if (input.error !== undefined) $set.error = input.error;
       if (input.completedAt !== undefined) $set.completedAt = input.completedAt;
+      if (input.model !== undefined) $set.model = input.model;
+      if (input.promptKey !== undefined) $set.promptKey = input.promptKey;
+      if (input.promptVersion !== undefined) $set.promptVersion = input.promptVersion;
+      if (input.usage !== undefined) $set.usage = input.usage;
+      if (input.latencyMs !== undefined) $set.latencyMs = input.latencyMs;
+      if (input.knowledgeUsed !== undefined) $set.knowledgeUsed = input.knowledgeUsed;
 
       try {
         // Defensive read-only branch: never sends an empty `$set`. MongoDB 7 +

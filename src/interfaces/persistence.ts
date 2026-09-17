@@ -1,3 +1,6 @@
+import type { ConversationStage } from '../enums/ConversationStage.js';
+import type { DecisionAction } from '../enums/DecisionAction.js';
+import type { EscalationStatus } from '../enums/EscalationStatus.js';
 import type { RunStatus } from '../enums/RunStatus.js';
 import type { ThreadStatus } from '../enums/ThreadStatus.js';
 import type { TicketRoute } from './domain.js';
@@ -56,6 +59,12 @@ export interface Run {
   error: string | undefined;
   startedAt: string;
   completedAt: string | undefined;
+  model?: string | undefined;
+  promptKey?: string | undefined;
+  promptVersion?: number | undefined;
+  usage?: { promptTokens: number; completionTokens: number; totalTokens: number } | undefined;
+  latencyMs?: number | undefined;
+  knowledgeUsed?: { key: string; version: number }[] | undefined;
 }
 
 export interface CreateThreadInput {
@@ -88,6 +97,12 @@ export interface CreateRunInput {
   threadId: EntityId;
   type: RunType;
   input: Record<string, unknown>;
+  model?: string | undefined;
+  promptKey?: string | undefined;
+  promptVersion?: number | undefined;
+  usage?: { promptTokens: number; completionTokens: number; totalTokens: number } | undefined;
+  latencyMs?: number | undefined;
+  knowledgeUsed?: { key: string; version: number }[] | undefined;
 }
 
 export interface UpdateRunInput {
@@ -95,6 +110,83 @@ export interface UpdateRunInput {
   output?: Record<string, unknown>;
   error?: string;
   completedAt?: string;
+  model?: string | undefined;
+  promptKey?: string | undefined;
+  promptVersion?: number | undefined;
+  usage?: { promptTokens: number; completionTokens: number; totalTokens: number } | undefined;
+  latencyMs?: number | undefined;
+  knowledgeUsed?: { key: string; version: number }[] | undefined;
+}
+
+export interface ConversationState {
+  threadId: EntityId;
+  stage: ConversationStage;
+  data: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpsertConversationStateInput {
+  threadId: EntityId;
+  stage: ConversationStage;
+  data?: Record<string, unknown>;
+}
+
+export interface DecisionValidation {
+  valid: boolean;
+  errors: string[];
+}
+
+export interface Decision {
+  id: EntityId;
+  runId: EntityId;
+  threadId: EntityId;
+  schemaVersion: number;
+  intent: string;
+  action: DecisionAction;
+  confidence: number;
+  decision: Record<string, unknown>;
+  validation: DecisionValidation;
+  fallback: boolean;
+  createdAt: string;
+}
+
+export interface CreateDecisionInput {
+  runId: EntityId;
+  threadId: EntityId;
+  schemaVersion: number;
+  intent: string;
+  action: DecisionAction;
+  confidence: number;
+  decision: Record<string, unknown>;
+  validation: DecisionValidation;
+  fallback: boolean;
+}
+
+export interface EscalationRecord {
+  id: EntityId;
+  threadId: EntityId;
+  runId: EntityId | undefined;
+  topicKey: string;
+  detectedIntent: string | undefined;
+  reason: string;
+  summary: string;
+  department: string;
+  priority: string;
+  status: EscalationStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEscalationInput {
+  threadId: EntityId;
+  runId?: EntityId;
+  topicKey: string;
+  detectedIntent?: string;
+  reason: string;
+  summary: string;
+  department: string;
+  priority: string;
 }
 
 export interface PaginationParams {
@@ -141,11 +233,31 @@ export interface RunRepository {
   listByThread(threadId: EntityId, params?: PaginationParams): Promise<PaginatedResult<Run>>;
 }
 
+export interface ConversationStateRepository {
+  findByThread(threadId: EntityId): Promise<ConversationState | null>;
+  upsert(input: UpsertConversationStateInput): Promise<ConversationState>;
+}
+
+export interface DecisionRepository {
+  create(input: CreateDecisionInput): Promise<Decision>;
+  findByRunId(runId: EntityId): Promise<Decision | null>;
+  listByThread(threadId: EntityId, params?: PaginationParams): Promise<PaginatedResult<Decision>>;
+}
+
+export interface EscalationRecordRepository {
+  create(input: CreateEscalationInput): Promise<EscalationRecord>;
+  updateStatus(id: EntityId, status: EscalationStatus): Promise<EscalationRecord>;
+  listByThread(threadId: EntityId, params?: PaginationParams): Promise<PaginatedResult<EscalationRecord>>;
+}
+
 export interface Persistence {
   threads: ThreadRepository;
   messages: MessageRepository;
   memories: MemoryRepository;
   runs: RunRepository;
+  conversationStates: ConversationStateRepository;
+  decisions: DecisionRepository;
+  escalations: EscalationRecordRepository;
   connect(): Promise<void>;
   close(): Promise<void>;
   health(): Promise<HealthStatus>;

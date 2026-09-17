@@ -6,6 +6,17 @@ Base path: `/api` (health and metrics are unprefixed).
 
 **Implemented today:** `/health`, `/metrics`, and `POST /api/v1/tickets/:ticketId/conversations`. Everything else below the metrics row is the target contract — not yet routed.
 
+## Structure
+
+Routing is split by audience so `routes.ts` stays a short mount table:
+
+- `src/api/http/routes.ts` — composition root; one `router.use` per audience. No handlers here.
+- `src/api/http/routers/SystemRouter.ts` — ops/internal, mounted unprefixed: `/health`, `/metrics`.
+- `src/api/http/routers/V1Router.ts` — public admin API, mounted at `/api/v1` (`X-Api-Key`).
+- `src/api/http/controllers/` — thin handlers; one file per concern.
+
+To add a route: extend the audience router and mount a controller there — keep `routes.ts` a mount table.
+
 | method | path | auth | db | status | notes |
 |---|---|---|---|---|---|
 | GET | `/health` | no | no | implemented | mongo/redis/typesense/llm; 200 / 503 |
@@ -56,22 +67,28 @@ Response (`200`):
   "data": {
     "reply": "…",
     "reply_to_external_id": "mid_123",
-    "transfer_to_agent": null,   // reserved; always null for now
-    "media": null,               // reserved; { kind, url } when present
-    "route": "ai",
-    "ai_routed": true,
+    "transfer_to_agent": false,   // true exactly when escalated
+    "attachments": [],            // pipeline-built AiAttachment[]; [] when none
+    "route": "ai",                // "ai" | "agent" — flips to "agent" on escalation
+    "ai_routed": true,            // !transfer_to_agent
     "language": "Taglish",       // AI-detected: English | Tagalog | Taglish, or null
-    "usage": { "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0 }
+    "usage": { "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0 } // or null
   }
 }
 ```
 
+- `transfer_to_agent` is `true` exactly when the turn escalated (`DecisionAction.Escalate`); otherwise `false`.
+- `route` is `"agent"` on escalation, `"ai"` otherwise; `ai_routed` is its inverse.
+- `attachments` carries server-built images only (e.g. the quoted variant photo with
+  `reference: { kind: "product_variant", id }`); LLM-provided URLs are replaced, never passed through.
+- `media` was removed from this contract (breaking, approved) — read `attachments` instead.
 - `language` is detected by the AI (concurrently with the reply); a detection failure yields `null`
   and never blocks the reply.
 - The reply is not a stored admin message — the admin creates the customer-facing message on its own
   side (its `/send` path, marked as AI-origin).
 - Errors: `401 UNAUTHORIZED` (missing/invalid key), `422 VALIDATION_ERROR` (bad payload).
-- `route` / `ai_routed` are constant (`ai` / `true`) until rule-based routing and the classifier land.
+- Inbound `attachments` on `latest_message` / `context_history` are accepted by the validator but
+  DROPPED in Phase 1 — never persisted or rendered (see `LoadContext.ts`).
 
 ## SSE protocol
 
@@ -102,6 +119,9 @@ npm run mock:admin        # listens on MOCK_ADMIN_API_PORT (default 8000)
 | GET | `/api/v1/motorcycles` | API key |
 | GET | `/api/v1/branches` | API key |
 | GET | `/api/v1/ai-response-templates` | API key |
+| GET | `/api/v1/knowledge-entries` | API key |
+| GET | `/api/v1/escalation-topics` | API key |
+| GET | `/api/v1/promotions` | API key |
 
 - Auth mirrors the admin: `X-Api-Key` header **or** `?api_key=`; the value is `DOMAIN_API_KEY`.
   Failure → `401 { "error": "Unauthorized or invalid key detected. Failed to access content." }`.
@@ -109,7 +129,10 @@ npm run mock:admin        # listens on MOCK_ADMIN_API_PORT (default 8000)
   `{ "success": true, "data": [...], "message": "Motorcycles retrieved.", "meta": { "current_page", "per_page", "total", "last_page" } }`.
 - Query filters mirror the admin: `search`, `brand[]`, `status[]`, `variant_type`, `min_srp`,
   `max_srp`, `available`, `sort`, `per_page` (≤50, default 15), `page`.
-- Point the service at it with `DOMAIN_API_URL=http://localhost:8000/api`.
+- `GET /api/v1/motorcycles` also accepts `?include=variants,terms` — the knowledge service always
+  sends `include=variants,terms` so quotes resolve variant prices and installment terms.
+- Point the service at it with `DOMAIN_API_URL=http://localhost:8000/api/v1` (the versioned root —
+  `DomainHttpClient` appends paths like `/motorcycles` directly; a bare `/api` base double-nests).
 
 ## Conventions
 

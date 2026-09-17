@@ -67,7 +67,7 @@ Status **422**, body:
 1. Create `src/api/http/validators/<concern>Validator.ts`.
 2. Define `xSchema` with `.strip()` and export its `z.infer` type.
 3. Export `validateX = createValidator({ schema: xSchema, source })`.
-4. Mount it on the route in `src/api/http/routes.ts`, before the handler.
+4. Mount it on the route in the matching audience router (`src/api/http/routers/`, e.g. `V1Router.ts`), before the handler.
 5. Add a test under `tests/unit/api/http/validators/<concernValidator>.test.ts` (camelCase;
    precedent `sendMessageValidator.test.ts`).
 
@@ -120,3 +120,34 @@ invalid request returns 422 with `error.code === 'VALIDATION_ERROR'` and a popul
 
 - Route table and error envelope: [routes.md](./routes.md).
 - Naming: [conventions.md](./conventions.md).
+- Decision wire shape, post-checks, and fallback: [ai-decision-contract.md](./ai-decision-contract.md).
+
+## Second seam: LLM-output validation (distinct from HTTP input)
+
+HTTP validators assert what the **admin** sends. A second, separate layer asserts what the
+**LLM** returns — `src/services/decision/` (`DecisionSchema.ts` + `DecisionValidator.ts` +
+`FallbackDecision.ts`), applied in `ValidateAndApply.ts`. The two seams never share code:
+the first guards the controller boundary, the second guards the model boundary.
+
+- **Wire schema** (`DecisionSchema.ts`): the model must return `responseFormat: 'json_object'` in
+  the exact snake_case shape (`schema_version: 1`, intent, numeric `action`, `response.message`,
+  `escalation`, …), parsed and mapped to camelCase (`parseAiDecisionWire`). Unparseable or
+  off-shape output is a `DECISION_PARSE_ERROR`, never a 500 — see fallback below.
+- **Post-checks A–F** (`validateDecision`, in order): A — guard-wins coercion (a deterministic
+  guard hit rewrites any non-matching decision into the topic's escalation); B — an LLM-claimed
+  escalation with no guard hit falls back (`LLM escalation references an unknown topic`);
+  C — payment gating (a `price.*` quote with no `payment_preference` becomes
+  `pricing.ask_payment_type`); D — variant gating (a price intent with several matches and no
+  `selected_variant_id` becomes `pricing.ask_variant`); E — first-assistant-turn greeting flag;
+  F — prune `ai_inferred` memory updates below 0.7 confidence (`customer_stated` always kept).
+  Variant gating runs before payment gating, so the variant question wins when both answers are
+  missing.
+- **Fallback** (`FallbackDecision.ts`): any parse failure or unrenderable template degrades to the
+  hardcoded `fallback.general` line (Tagalog, confidence 0) — a data outage never becomes a 500.
+  The fallback decision is persisted with `fallback: true` and `validation.valid: false`.
+- **`memory_updates` are pruned, not applied.** Post-check F filters the list, but Phase 1 never
+  writes it to memory (`TODO(P2)` in `ValidateAndApply.ts`) — validated, then ignored.
+- **`knowledgeUsed` is a Phase-1 convention, not a measurement.** The pipeline seeds
+  `escalation_topics:1`, accumulates real template versions as each entry renders, and pins
+  `catalog:variant:<id>:1` plus topic refs at version 1 (synthetic until Phase 3 replaces them
+  with real row versions). See [ai-decision-contract.md](./ai-decision-contract.md).

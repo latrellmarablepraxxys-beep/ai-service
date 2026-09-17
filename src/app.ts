@@ -6,7 +6,7 @@ import { errorHandler } from './api/http/middleware/ErrorHandler.js';
 import { notFound } from './api/http/middleware/NotFound.js';
 import { createRateLimiter } from './api/http/middleware/RateLimit.js';
 import { requestLogger } from './api/http/middleware/RequestLogger.js';
-import { createHttpRouter, createV1Router } from './api/http/routes.js';
+import { createHttpRouter } from './api/http/routes.js';
 import { appConfig } from './config/app.js';
 import type { AppDependencies } from './interfaces/http.js';
 
@@ -49,7 +49,6 @@ export const buildExpressApp = (dependencies: AppDependencies): Express => {
   app.use(createRateLimiter());
 
   app.use(createHttpRouter(dependencies));
-  app.use('/api/v1', createV1Router(dependencies));
 
   app.use(notFound);
   app.use(errorHandler);

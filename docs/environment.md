@@ -19,10 +19,11 @@ Start them: `docker compose up -d`
 | `APP_URL` | public base URL of this service (empty → `http://localhost:$PORT`) |
 | `FRONTEND_URL` | CORS origin |
 | `TRUST_PROXY` | Express `trust proxy` setting (empty = direct connections; `true`/`false` or a hop count string, e.g. `1`). Required behind a load balancer so client IPs (and rate-limit buckets) are correct |
-| `DOMAIN_API_URL` | domain admin API base URL (tickets/agents/SLA) |
+| `DOMAIN_API_URL` | domain admin API base URL — must be the **versioned root** (`http://localhost:8000/api/v1`); `DomainHttpClient` appends resource paths directly |
 | `DOMAIN_API_KEY` | service key sent as `X-Api-Key` |
-| `DOMAIN_API_TIMEOUT_MS` | request timeout |
-| `AI_API_KEYS` | comma-separated API keys accepted on `/api/v1` (admin app sends one as `X-Api-Key`); required in production |
+| `DOMAIN_API_TIMEOUT_MS` | outbound domain request timeout in ms (default 10000; `AbortSignal.timeout`) |
+| `KNOWLEDGE_CACHE_TTL_SECONDS` | Redis TTL for knowledge entries/topics/catalog/promotions (default 300) |
+| `AI_API_KEYS` | comma-separated API keys accepted on `/api/v1` (admin app sends one as `X-Api-Key`); supports rotation; required in production |
 | `AI_PROVIDER` | active provider selector (`openai` | `ollama` | `novita`, default `openai`) |
 | `OPENAI_BASE_URL` / `OPENAI_API_KEY` / `OPENAI_CHAT_MODEL` / `OPENAI_CLASSIFIER_MODEL` / `OPENAI_EMBEDDING_MODEL` | openai overrides (empty → preset) |
 | `OLLAMA_BASE_URL` / `OLLAMA_API_KEY` / `OLLAMA_CHAT_MODEL` / `OLLAMA_CLASSIFIER_MODEL` / `OLLAMA_EMBEDDING_MODEL` | ollama overrides (empty → preset; no key needed) |
@@ -47,7 +48,7 @@ Start them: `docker compose up -d`
 | `TYPESENSE_CONNECTION_TIMEOUT_SECONDS` | Typesense client connection timeout (default 5) |
 | `WEBHOOK_VERIFY_TOKEN` | webhook verification token — optional (required once the webhook route lands) |
 | `WEBHOOK_SIGNING_SECRET` | webhook HMAC signing secret — optional (required once the webhook route lands) |
-| `MOCK_ADMIN_API_PORT` | dev-only mock admin API port (default 8000); start with `npm run mock:admin` |
+| `MOCK_ADMIN_API_PORT` | dev-only mock admin API port (default 8000); start with `npm run mock:admin`; point `DOMAIN_API_URL` at `http://localhost:$MOCK_ADMIN_API_PORT/api/v1` |
 | `LOG_LEVEL` / `LOG_DIR` | logging |
 | `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` | rate limiting |
 

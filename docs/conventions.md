@@ -14,7 +14,7 @@ precedent in the right-hand column.
 
 | artefact | convention | example | precedent |
 |---|---|---|---|
-| layer source file (`src/services/`, `src/api/**` except `routes.ts`, `src/persistence/`, `src/enums/`, `src/graph/`, `src/prompts/`) | PascalCase, named after its primary export/concern; role suffixes like `*Controller.ts`, `*Validator.ts`, `*Repository.ts` | `ErrorHandler.ts`, `SendMessageValidator.ts`, `ThreadStatus.ts`, `LlmProvider.ts`, `ThreadRepository.ts` | `src/api/http/middleware/ErrorHandler.ts`, `src/api/http/validators/SendMessageValidator.ts`, `src/enums/ThreadStatus.ts`, `src/services/llm/LlmProvider.ts`, `src/persistence/repositories/ThreadRepository.ts` |
+| layer source file (`src/services/`, `src/api/**` except `routes.ts`, `src/persistence/`, `src/enums/`, `src/graph/`, `src/prompts/`) | PascalCase, named after its primary export/concern; role suffixes like `*Controller.ts`, `*Router.ts`, `*Validator.ts`, `*Repository.ts` | `ErrorHandler.ts`, `SystemRouter.ts`, `SendMessageValidator.ts`, `ThreadStatus.ts`, `LlmProvider.ts`, `ThreadRepository.ts` | `src/api/http/middleware/ErrorHandler.ts`, `src/api/http/routers/SystemRouter.ts`, `src/api/http/validators/SendMessageValidator.ts`, `src/enums/ThreadStatus.ts`, `src/services/llm/LlmProvider.ts`, `src/persistence/repositories/ThreadRepository.ts` |
 | support source file (`src/config/`, `src/interfaces/`, `src/utils/`, `src/api/http/routes.ts`) | camelCase, named after its primary export/concern | `env.ts`, `errors.ts`, `routes.ts` | `src/config/env.ts` |
 | test file | camelCase `<subject>.test.ts`, mirroring the `src/` concern path | `validate.test.ts`, `threadStatus.test.ts` | `tests/unit/api/http/validators/validate.test.ts` |
 | fake/stub helper in tests | camelCase, no `.test.ts` suffix | `stubDependencies.ts`, `fakeMongo.ts` | `tests/unit/api/http/stubDependencies.ts` |
@@ -33,7 +33,7 @@ The filename-case ESLint rule (`eslint.config.js`) enforces this split.
 | artefact | convention | example | precedent |
 |---|---|---|---|
 | function / method | camelCase, verb-first | `toErrorResponse`, `flattenIssues`, `resolvePagination` | `src/utils/errors.ts:48` |
-| factory | `create*` (stateful clients, routers, repositories, middleware) | `createValidator`, `createHttpRouter`, `createThreadRepository` | `src/api/http/validators/Validate.ts:18`, `src/api/http/routes.ts:26` |
+| factory | `create*` (stateful clients, routers, repositories, middleware) | `createValidator`, `createSystemRouter`, `createV1Router`, `createThreadRepository` | `src/api/http/validators/Validate.ts:18`, `src/api/http/routers/SystemRouter.ts:7` |
 | builder | `build*` (compose an object graph) | `buildExpressApp` | `src/app.ts:31` |
 | guard | `is*` / `has*` returning a type predicate | `isAppError`, `isMalformedJsonError` | `src/utils/errors.ts:19` |
 
@@ -60,6 +60,9 @@ Sanctioned exemptions:
   `PaginationQuery`) — the schema is the source of truth.
 - Document shapes + Zod schemas for MongoDB own-state live in
   `src/persistence/models/<Entity>.ts` (implementation files), not `src/interfaces/`.
+- Controller `*Dependencies` interfaces (`ConversationControllerDependencies`,
+  `HealthControllerDependencies`) stay in their controller file: they narrow `AppDependencies` for one
+  handler and are not shared contracts.
 - Hand-written shared contracts go in `src/interfaces/`.
 
 ## Zod schemas
@@ -89,7 +92,8 @@ values, not constants.
 ## Routes
 
 - Paths are lowercase kebab-case; params are `:name` (`:id`).
-- Precedent: `/health/llm`, `/api/tickets/:id/messages`, `/api/tickets/:id/escalate` (`src/api/http/routes.ts`).
+- `routes.ts` is a composition root (mounts only); concrete paths live in the audience routers.
+- Precedent: `/health`, `/metrics` (`src/api/http/routers/SystemRouter.ts`); `/api/v1/tickets/:ticketId/conversations` (`src/api/http/routers/V1Router.ts`).
 
 ## MongoDB own-state
 

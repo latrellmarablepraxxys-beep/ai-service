@@ -24,6 +24,8 @@ describe('loadEnv',
         expect(env.RATE_LIMIT_WINDOW_MS).toBe(60_000);
         expect(env.AI_API_KEYS).toBe('');
         expect(env.MOCK_ADMIN_API_PORT).toBe(8000);
+        expect(env.KNOWLEDGE_CACHE_TTL_SECONDS).toBe(300);
+        expect(env.DOMAIN_API_URL).toBe('http://localhost:8000/api/v1');
       });
 
     it('coerces numeric strings',
@@ -42,6 +44,14 @@ describe('loadEnv',
         expect(env.TYPESENSE_CONNECTION_TIMEOUT_SECONDS).toBe(7);
         expect(env.REDIS_COMMAND_TIMEOUT_MS).toBe(1500);
         expect(env.RATE_LIMIT_MAX).toBe(250);
+        expect(env.KNOWLEDGE_CACHE_TTL_SECONDS).toBe(300);
+
+        const overridden = loadEnv({
+          NODE_ENV: 'test',
+          KNOWLEDGE_CACHE_TTL_SECONDS: '600',
+        });
+
+        expect(overridden.KNOWLEDGE_CACHE_TTL_SECONDS).toBe(600);
       });
 
     it('overrides values from the source',

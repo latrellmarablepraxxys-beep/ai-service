@@ -108,6 +108,7 @@ const start = async (): Promise<void> => {
     llmHealth: () => llm.health(),
     persistence,
     llm,
+    cache,
   };
 
   const app = buildExpressApp(dependencies);

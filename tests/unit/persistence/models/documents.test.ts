@@ -5,6 +5,18 @@ import {
 
 import { RunStatus } from '@enums/RunStatus.js';
 import { ThreadStatus } from '@enums/ThreadStatus.js';
+import {
+  CONVERSATION_STATE_COLLECTION,
+  CONVERSATION_STATE_INDEXES,
+} from '@persistence/models/ConversationState.js';
+import {
+  DECISION_COLLECTION,
+  DECISION_INDEXES,
+} from '@persistence/models/Decision.js';
+import {
+  ESCALATION_COLLECTION,
+  ESCALATION_INDEXES,
+} from '@persistence/models/Escalation.js';
 import type { MemoryDocument } from '@persistence/models/Memory.js';
 import {
   MEMORY_COLLECTION,
@@ -294,6 +306,9 @@ describe('collection names and indexes',
         expect(MESSAGE_COLLECTION).toBe('messages');
         expect(MEMORY_COLLECTION).toBe('memories');
         expect(RUN_COLLECTION).toBe('runs');
+        expect(CONVERSATION_STATE_COLLECTION).toBe('conversation_states');
+        expect(DECISION_COLLECTION).toBe('decisions');
+        expect(ESCALATION_COLLECTION).toBe('escalations');
       });
 
     it('declares non-empty index specs for every collection',
@@ -302,5 +317,8 @@ describe('collection names and indexes',
         expect(MESSAGE_INDEXES.length).toBeGreaterThan(0);
         expect(MEMORY_INDEXES.length).toBeGreaterThan(0);
         expect(RUN_INDEXES.length).toBeGreaterThan(0);
+        expect(CONVERSATION_STATE_INDEXES.length).toBeGreaterThan(0);
+        expect(DECISION_INDEXES.length).toBeGreaterThan(0);
+        expect(ESCALATION_INDEXES.length).toBeGreaterThan(0);
       });
   });

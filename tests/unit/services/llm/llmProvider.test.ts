@@ -340,6 +340,30 @@ describe('llmProvider',
             expect(response.model).toBe('override-model');
           });
 
+        it('honours a per-request responseFormat override',
+          async () => {
+            const provider = createLlmProvider(config);
+            mocks.chatModel.invoke.mockResolvedValue({
+              content: '{"a":1}',
+              response_metadata: { finish_reason: 'stop' },
+            });
+
+            await provider.chat({
+              messages: [
+                {
+                  role: 'user',
+                  content: 'x' 
+                }
+              ],
+              responseFormat: 'json_object',
+            });
+
+            expect(ChatModelMock).toHaveBeenCalledWith({
+              config,
+              responseFormat: 'json_object' 
+            });
+          });
+
         it('maps failures to LLM_REQUEST_FAILED 503',
           async () => {
             const provider = createLlmProvider(config);

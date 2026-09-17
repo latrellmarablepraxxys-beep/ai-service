@@ -8,6 +8,9 @@
  */
 
 import type { CollectionName, IndexSpec } from '../../interfaces/mongo.js';
+import { CONVERSATION_STATE_COLLECTION, CONVERSATION_STATE_INDEXES } from './ConversationState.js';
+import { DECISION_COLLECTION, DECISION_INDEXES } from './Decision.js';
+import { ESCALATION_COLLECTION, ESCALATION_INDEXES } from './Escalation.js';
 import { MEMORY_COLLECTION, MEMORY_INDEXES } from './Memory.js';
 import { MESSAGE_COLLECTION, MESSAGE_INDEXES } from './Message.js';
 import { RUN_COLLECTION, RUN_INDEXES } from './Run.js';
@@ -18,6 +21,9 @@ export const COLLECTIONS = Object.freeze({
   messages: MESSAGE_COLLECTION,
   memories: MEMORY_COLLECTION,
   runs: RUN_COLLECTION,
+  conversation_states: CONVERSATION_STATE_COLLECTION,
+  decisions: DECISION_COLLECTION,
+  escalations: ESCALATION_COLLECTION,
 } as const) satisfies Record<CollectionName, CollectionName>;
 
 export const COLLECTION_INDEXES: Readonly<Record<CollectionName, IndexSpec[]>> = Object.freeze({
@@ -25,4 +31,7 @@ export const COLLECTION_INDEXES: Readonly<Record<CollectionName, IndexSpec[]>> =
   messages: [...MESSAGE_INDEXES],
   memories: [...MEMORY_INDEXES],
   runs: [...RUN_INDEXES],
+  conversation_states: [...CONVERSATION_STATE_INDEXES],
+  decisions: [...DECISION_INDEXES],
+  escalations: [...ESCALATION_INDEXES],
 });

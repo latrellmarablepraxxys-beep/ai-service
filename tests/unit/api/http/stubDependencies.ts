@@ -1,4 +1,5 @@
 import { fakeAiProviderConfig } from '@fakes/fakeAiProviderConfig.js';
+import { FakeCacheClient } from '@fakes/fakeCacheClient.js';
 import { FakeLlmProvider } from '@fakes/fakeLlmProvider.js';
 import { FakePersistence } from '@fakes/fakePersistence.js';
 import type { HealthStatus } from '@interfaces/cache.js';
@@ -23,5 +24,6 @@ export const stubDependencies = (overrides: Partial<AppDependencies> = {}): AppD
   llmHealth: stubProbe(healthStatus()),
   persistence: new FakePersistence(),
   llm: new FakeLlmProvider({ config: fakeAiProviderConfig }),
+  cache: new FakeCacheClient(),
   ...overrides,
 });

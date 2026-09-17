@@ -1,11 +1,17 @@
 import type { CreateMongoPersistenceOptions } from '../interfaces/mongo.js';
 import type {
+  ConversationStateRepository,
+  DecisionRepository,
+  EscalationRecordRepository,
   MemoryRepository,
   MessageRepository,
   Persistence,
   RunRepository,
   ThreadRepository,
 } from '../interfaces/persistence.js';
+import { createConversationStateRepository } from './repositories/ConversationStateRepository.js';
+import { createDecisionRepository } from './repositories/DecisionRepository.js';
+import { createEscalationRecordRepository } from './repositories/EscalationRecordRepository.js';
 import { createMemoryRepository } from './repositories/MemoryRepository.js';
 import { createMessageRepository } from './repositories/MessageRepository.js';
 import { createRunRepository } from './repositories/RunRepository.js';
@@ -25,6 +31,9 @@ export const createMongoPersistence = (options: CreateMongoPersistenceOptions): 
   let messages: MessageRepository | undefined;
   let memories: MemoryRepository | undefined;
   let runs: RunRepository | undefined;
+  let conversationStates: ConversationStateRepository | undefined;
+  let decisions: DecisionRepository | undefined;
+  let escalations: EscalationRecordRepository | undefined;
 
   return {
     get threads(): ThreadRepository {
@@ -45,6 +54,21 @@ export const createMongoPersistence = (options: CreateMongoPersistenceOptions): 
     get runs(): RunRepository {
       runs ??= createRunRepository(connection.getDb());
       return runs;
+    },
+
+    get conversationStates(): ConversationStateRepository {
+      conversationStates ??= createConversationStateRepository(connection.getDb());
+      return conversationStates;
+    },
+
+    get decisions(): DecisionRepository {
+      decisions ??= createDecisionRepository(connection.getDb());
+      return decisions;
+    },
+
+    get escalations(): EscalationRecordRepository {
+      escalations ??= createEscalationRecordRepository(connection.getDb());
+      return escalations;
     },
 
     connect: (): Promise<void> => connection.connect(),

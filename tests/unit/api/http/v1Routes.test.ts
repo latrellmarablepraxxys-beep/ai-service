@@ -76,10 +76,14 @@ describe('POST /api/v1/tickets/:ticketId/conversations',
         expect(response.status).toBe(200);
         const body = response.body as SuccessResponse<ConversationResponseData>;
         expect(body.success).toBe(true);
-        expect(body.data.reply).toBe('fake assistant reply');
+        // The stub LLM's canned reply is not decision JSON, so the pipeline
+        // degrades to the hardcoded fallback line (no knowledge backend here).
+        expect(body.data.reply).toBe(
+          'Pasensya na po — pakiulit po ang inyong tanong, o ikokonekta ko po kayo sa aming team member na makakatulong.',
+        );
         expect(body.data.reply_to_external_id).toBe('mid_1');
-        expect(body.data.transfer_to_agent).toBeNull();
-        expect(body.data.media).toBeNull();
+        expect(body.data.transfer_to_agent).toBe(false);
+        expect(body.data.attachments).toEqual([]);
         expect(body.data.route).toBe('ai');
         expect(body.data.ai_routed).toBe(true);
         expect(body.data.language).toBe('Tagalog');

@@ -17,7 +17,7 @@ const toResponseData = (result: ConversationResult): ConversationResponseData =>
   reply: result.reply,
   reply_to_external_id: result.replyToExternalId,
   transfer_to_agent: result.transferToAgent,
-  media: result.media,
+  attachments: result.attachments,
   route: result.route,
   ai_routed: result.aiRouted,
   language: result.language,

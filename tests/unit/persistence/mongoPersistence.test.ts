@@ -2,6 +2,9 @@ import {
   describe, expect, it, vi 
 } from 'vitest';
 
+import { ConversationStage } from '@enums/ConversationStage.js';
+import { DecisionAction } from '@enums/DecisionAction.js';
+import { EscalationStatus } from '@enums/EscalationStatus.js';
 import type { MongoConnection } from '@interfaces/mongo.js';
 import { createMongoPersistence } from '@persistence/MongoPersistence.js';
 import { AppError } from '@utils/errors.js';
@@ -83,10 +86,41 @@ describe('createMongoPersistence',
           type: 'routing',
           input: {} 
         });
+        const state = await persistence.conversationStates.upsert({
+          threadId: thread.id,
+          stage: ConversationStage.Greeted,
+          data: {},
+        });
+        const decision = await persistence.decisions.create({
+          runId: run.id,
+          threadId: thread.id,
+          schemaVersion: 1,
+          intent: 'quote',
+          action: DecisionAction.Respond,
+          confidence: 0.9,
+          decision: {},
+          validation: {
+            valid: true,
+            errors: [],
+          },
+          fallback: false,
+        });
+        const escalation = await persistence.escalations.create({
+          threadId: thread.id,
+          runId: run.id,
+          topicKey: 'payments',
+          reason: 'customer asked for an agent',
+          summary: 'handoff requested',
+          department: 'sales',
+          priority: 'high',
+        });
 
         expect(message.threadId).toBe(thread.id);
         expect(memory.threadId).toBe(thread.id);
         expect(run.threadId).toBe(thread.id);
+        expect(state.threadId).toBe(thread.id);
+        expect(decision.runId).toBe(run.id);
+        expect(escalation.status).toBe(EscalationStatus.Pending);
         await expect(persistence.threads.findById(thread.id)).resolves.toMatchObject({ticketId: 't-1',});
       });
 

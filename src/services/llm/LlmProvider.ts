@@ -186,6 +186,7 @@ export const createLlmProvider = (config: AiProviderConfig): LlmProvider => {
     const hasOverrides =
       request.temperature !== undefined ||
       request.maxTokens !== undefined ||
+      request.responseFormat !== undefined ||
       (request.model !== undefined && request.model !== config.models.chat);
     if (!hasOverrides) return getChatModel({ config });
     return getChatModel({
@@ -193,6 +194,7 @@ export const createLlmProvider = (config: AiProviderConfig): LlmProvider => {
       ...(request.model !== undefined && { model: request.model }),
       ...(request.temperature !== undefined && { temperature: request.temperature }),
       ...(request.maxTokens !== undefined && { maxTokens: request.maxTokens }),
+      ...(request.responseFormat !== undefined && { responseFormat: request.responseFormat }),
     });
   };
 

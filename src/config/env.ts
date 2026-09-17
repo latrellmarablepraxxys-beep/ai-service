@@ -24,9 +24,11 @@ const schema = z
     // Express `trust proxy` setting: '' (disabled), 'true'/'false', or a hop count.
     TRUST_PROXY: z.string().default(''),
 
-    DOMAIN_API_URL: z.string().url().default('http://localhost:8000/api'),
+    DOMAIN_API_URL: z.string().url().default('http://localhost:8000/api/v1'),
     DOMAIN_API_KEY: z.string().default(''),
     DOMAIN_API_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
+
+    KNOWLEDGE_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(300),
 
     // Comma-separated API keys the admin app presents as `X-Api-Key`.
     AI_API_KEYS: z.string().default(''),

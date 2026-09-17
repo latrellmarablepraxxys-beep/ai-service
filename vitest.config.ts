@@ -1,25 +1,26 @@
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from 'vitest/config';
 
-const src = (segment: string): string =>
-  fileURLToPath(new URL(`./src/${segment}`, import.meta.url));
+const root = path.dirname(fileURLToPath(import.meta.url));
+const src = (...segments: string[]): string => path.join(root, 'src', ...segments);
 
 export default defineConfig({
   resolve: {
     alias: {
-      '@api/':         src('api/'),
-      '@config/':      src('config/'),
-      '@enums/':       src('enums/'),
-      '@fakes/':       src('../tests/fakes/'),
-      '@graph/':       src('graph/'),
-      '@interfaces/':  src('interfaces/'),
-      '@jobs/':        src('jobs/'),
-      '@persistence/': src('persistence/'),
-      '@prompts/':     src('prompts/'),
-      '@services/':    src('services/'),
-      '@utils/':       src('utils/'),
-      '@src/':         src(''),
+      '@api': src('api'),
+      '@config': src('config'),
+      '@enums': src('enums'),
+      '@fakes': path.join(root, 'tests', 'fakes'),
+      '@graph': src('graph'),
+      '@interfaces': src('interfaces'),
+      '@jobs': src('jobs'),
+      '@persistence': src('persistence'),
+      '@prompts': src('prompts'),
+      '@services': src('services'),
+      '@utils': src('utils'),
+      '@src': src(),
     },
   },
   test: {
@@ -48,7 +49,7 @@ export default defineConfig({
         lines: 80,
         functions: 80,
         branches: 80,
-        statements: 80 
+        statements: 80
       },
     },
   },

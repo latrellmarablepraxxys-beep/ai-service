@@ -4,15 +4,25 @@ import type {
   MockBranchQuery,
   MockBranchResource,
   MockBranchStatus,
+  MockEscalationTopic,
+  MockEscalationTopicQuery,
+  MockKnowledgeEntry,
+  MockKnowledgeEntryQuery,
   MockMotorcycleQuery,
   MockMotorcycleResource,
   MockMotorcycleStatus,
   MockPaginationMeta,
+  MockPromotion,
+  MockPromotionQuery,
 } from '../interfaces/mockAdminApi.js';
 import {
   MOCK_AI_RESPONSE_TEMPLATES,
   MOCK_BRANCHES,
+  MOCK_ESCALATION_TOPICS,
+  MOCK_KNOWLEDGE_ENTRIES,
   MOCK_MOTORCYCLES,
+  MOCK_MOTORCYCLE_VARIANTS,
+  MOCK_PROMOTIONS,
 } from './data.js';
 
 const DEFAULT_PER_PAGE = 15;
@@ -53,6 +63,12 @@ const matchesSearch = (values: readonly (string | null)[], search: string | unde
   return values.some((value) => (value ?? '').toLowerCase().includes(needle));
 };
 
+const wantsVariants = (include: string | undefined): boolean => {
+  if (include === undefined) return false;
+  const parts = include.split(',').map((part) => part.trim().toLowerCase());
+  return parts.includes('variants') || parts.includes('terms');
+};
+
 export const listMotorcycles = (
   query: MockMotorcycleQuery,
 ): { items: MockMotorcycleResource[]; meta: MockPaginationMeta } => {
@@ -90,20 +106,30 @@ export const listMotorcycles = (
     items, meta 
   } = paginate(sorted, query.page ?? 1, query.per_page ?? DEFAULT_PER_PAGE);
 
+  const withVariants = wantsVariants(query.include);
+
   return {
-    items: items.map((motorcycle) => ({
-      id: motorcycle.id,
-      name: motorcycle.name,
-      code: motorcycle.code,
-      brand: motorcycle.brand,
-      variant_type: motorcycle.variant_type,
-      srp: motorcycle.srp,
-      status: motorcycle.status,
-      status_label: MOTORCYCLE_STATUS_LABELS[motorcycle.status],
-      is_available: motorcycle.status === 0,
-      description: motorcycle.description,
-      image_url: motorcycle.image_url,
-    })),
+    items: items.map((motorcycle) => {
+      const resource: MockMotorcycleResource = {
+        id: motorcycle.id,
+        name: motorcycle.name,
+        code: motorcycle.code,
+        brand: motorcycle.brand,
+        variant_type: motorcycle.variant_type,
+        srp: motorcycle.srp,
+        status: motorcycle.status,
+        status_label: MOTORCYCLE_STATUS_LABELS[motorcycle.status],
+        is_available: motorcycle.status === 0,
+        description: motorcycle.description,
+        image_url: motorcycle.image_url,
+      };
+      if (withVariants) {
+        resource.variants = MOCK_MOTORCYCLE_VARIANTS.filter(
+          (variant) => variant.motorcycle_id === motorcycle.id,
+        );
+      }
+      return resource;
+    }),
     meta,
   };
 };
@@ -165,4 +191,61 @@ export const listAiResponseTemplates = (
     })),
     meta,
   };
+};
+
+export const listKnowledgeEntries = (
+  query: MockKnowledgeEntryQuery,
+): { items: MockKnowledgeEntry[]; meta: MockPaginationMeta } => {
+  const filtered = MOCK_KNOWLEDGE_ENTRIES.filter((entry) => {
+    if (query.keys !== undefined && !query.keys.includes(entry.key)) return false;
+    if (query.content_type !== undefined && !query.content_type.includes(entry.content_type)) {
+      return false;
+    }
+    if (!matchesSearch([
+      entry.key,
+      entry.title,
+      entry.content
+    ], query.search)) return false;
+    if (query.current !== undefined && entry.is_current !== query.current) return false;
+    return true;
+  });
+
+  const sorted = [...filtered].sort((a, b) => a.id - b.id);
+
+  return paginate(sorted, query.page ?? 1, query.per_page ?? DEFAULT_PER_PAGE);
+};
+
+export const listEscalationTopics = (
+  query: MockEscalationTopicQuery,
+): { items: MockEscalationTopic[]; meta: MockPaginationMeta } => {
+  const filtered = MOCK_ESCALATION_TOPICS.filter((topic) => {
+    if (query.active !== undefined && topic.is_active !== query.active) return false;
+    if (!matchesSearch([
+      topic.key,
+      topic.label,
+      topic.department,
+      ...topic.keywords
+    ], query.search)) return false;
+    return true;
+  });
+
+  const sorted = [...filtered].sort((a, b) => a.id - b.id);
+
+  return paginate(sorted, query.page ?? 1, query.per_page ?? DEFAULT_PER_PAGE);
+};
+
+export const listPromotions = (
+  query: MockPromotionQuery,
+): { items: MockPromotion[]; meta: MockPaginationMeta } => {
+  const filtered = MOCK_PROMOTIONS.filter((promotion) => {
+    if (query.applicability !== undefined && promotion.applicability !== query.applicability) {
+      return false;
+    }
+    if (query.current !== undefined && promotion.is_current !== query.current) return false;
+    return true;
+  });
+
+  const sorted = [...filtered].sort((a, b) => a.id - b.id);
+
+  return paginate(sorted, query.page ?? 1, query.per_page ?? DEFAULT_PER_PAGE);
 };

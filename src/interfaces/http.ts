@@ -1,6 +1,6 @@
 import type { ZodTypeAny } from 'zod';
 
-import type { HealthStatus } from './cache.js';
+import type { CacheClient, HealthStatus } from './cache.js';
 import type { LlmProvider } from './llm.js';
 import type { Persistence } from './persistence.js';
 
@@ -57,6 +57,7 @@ export interface AppDependencies {
   llmHealth: HealthProbe;
   persistence: Persistence;
   llm: LlmProvider;
+  cache: CacheClient;
   metrics?: MetricsSnapshot;
 }
 

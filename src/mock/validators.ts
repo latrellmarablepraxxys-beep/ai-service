@@ -4,6 +4,7 @@ import type { ZodError } from 'zod';
 import type {
   MockAiResponseTemplateType,
   MockBranchStatus,
+  MockKnowledgeContentType,
   MockMotorcycleStatus,
 } from '../interfaces/mockAdminApi.js';
 
@@ -57,6 +58,31 @@ const templateTypeSchema = z
   ])
   .transform((value): MockAiResponseTemplateType => (value === '1' ? 1 : 2));
 
+const knowledgeContentTypeSchema = z
+  .enum([
+    '1',
+    '2',
+    '3',
+    '4'
+  ])
+  .transform((value): MockKnowledgeContentType => {
+    if (value === '1') return 1;
+    if (value === '2') return 2;
+    if (value === '3') return 3;
+    return 4;
+  });
+
+/** Accepts `key=a,b`, `key=a&key=b`, and `key[]=a&key[]=b`; splits on commas. */
+const commaSeparated = (value: unknown): unknown => {
+  if (value === undefined || value === null) return undefined;
+  const parts = (Array.isArray(value) ? value : [value]).flatMap((entry) =>
+    String(entry)
+      .split(',')
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0));
+  return parts.length === 0 ? undefined : parts;
+};
+
 export const motorcycleQuerySchema = z
   .object({
     search: z.string().max(255).optional(),
@@ -76,6 +102,7 @@ export const motorcycleQuerySchema = z
     min_srp: optionalNumber,
     max_srp: optionalNumber,
     available: booleanQuery,
+    include: z.string().max(255).optional(),
     sort: z
       .enum([
         'name',
@@ -109,6 +136,50 @@ export const aiResponseTemplateQuerySchema = z
   .object({
     search: z.string().max(255).optional(),
     type: z.preprocess(toArray, z.array(templateTypeSchema).optional()),
+    per_page: perPageQuery,
+    page: pageQuery,
+  })
+  .strip();
+
+export const knowledgeEntryQuerySchema = z
+  .object({
+    keys: z.preprocess(
+      commaSeparated,
+      z
+        .array(z.string().min(1).max(255))
+        .optional(),
+    ),
+    content_type: z.preprocess(commaSeparated, z.array(knowledgeContentTypeSchema).optional()),
+    search: z.string().max(255).optional(),
+    current: booleanQuery,
+    per_page: perPageQuery,
+    page: pageQuery,
+  })
+  .strip();
+
+export const escalationTopicQuerySchema = z
+  .object({
+    active: booleanQuery,
+    search: z.string().max(255).optional(),
+    per_page: perPageQuery,
+    page: pageQuery,
+  })
+  .strip();
+
+export const promotionQuerySchema = z
+  .object({
+    applicability: z.preprocess(
+      emptyToUndefined,
+      z
+        .enum([
+          'cash',
+          'installment',
+          'bajaj',
+          'all'
+        ])
+        .optional(),
+    ),
+    current: booleanQuery,
     per_page: perPageQuery,
     page: pageQuery,
   })

@@ -3,7 +3,9 @@ import {
 } from 'vitest';
 
 import type { ChatMessage } from '@interfaces/llm.js';
-import {RESPONSE_AGENT_SYSTEM_PROMPT, buildResponseAgentMessages} from '@prompts/ResponseAgent.js';
+import {
+  RESPONSE_AGENT_SYSTEM_PROMPT, RESPONSE_AGENT_VERSION, buildResponseAgentMessages
+} from '@prompts/ResponseAgent.js';
 
 describe('RESPONSE_AGENT_SYSTEM_PROMPT',
   () => {
@@ -29,15 +31,55 @@ describe('RESPONSE_AGENT_SYSTEM_PROMPT',
     it('names the context blocks',
       () => {
         expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('<customer_context>');
-        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('<inventory_context>');
         expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('<knowledge_context>');
       });
 
-    it('lists escalation topics it must not answer',
+    it('carries no hardcoded catalog data',
       () => {
-        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('GCash');
-        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('OR/CR');
-        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('Discounts');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).not.toContain('GCash');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).not.toContain('OR/CR');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).not.toContain('Discounts');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).not.toContain('jotform.com');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).not.toContain('Helmet');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).not.toContain('₱');
+      });
+
+    it('declares the snake_case structured-output contract',
+      () => {
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('schema_version');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('state_transition');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('RESTRICTED_TOPIC');
+      });
+
+    it('lists the template-key catalog with the splice marker rule',
+      () => {
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('greeting.initial');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('pricing.ask_variant');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('pricing.ask_payment_type');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('price.installment');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('price.cash');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('freebies.installment');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('freebies.cash');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('freebies.bajaj');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('application.jotform_link');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('fallback.general');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('{{template}}');
+      });
+
+    it('documents the slot contract and the escalation rule',
+      () => {
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('product_query');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('selected_variant_id');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('payment_preference');
+        expect(RESPONSE_AGENT_SYSTEM_PROMPT).toContain('escalation.topic_key');
+      });
+  });
+
+describe('RESPONSE_AGENT_VERSION',
+  () => {
+    it('is versioned for run provenance',
+      () => {
+        expect(RESPONSE_AGENT_VERSION).toBe(2);
       });
   });
 

@@ -130,4 +130,32 @@ describe('GET /metrics',
         expect(response.headers['content-type']).toBe('text/plain; charset=utf-8; version=0.0.4');
         expect(response.text).toContain('http_request_duration_seconds');
       });
+
+    it('renders an injected metrics snapshot when one is provided',
+      async () => {
+        const dependencies = stubDependencies({
+          metrics: {
+            contentType: 'text/x-injected',
+            render: () => Promise.resolve('injected metrics body'),
+          },
+        });
+
+        const response = await request(buildExpressApp(dependencies)).get('/metrics');
+
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toMatch(/^text\/x-injected/);
+        expect(response.text).toBe('injected metrics body');
+      });
+  });
+
+describe('route audiences',
+  () => {
+    it('keeps the admin API off the root path',
+      async () => {
+        const response = await request(buildExpressApp(stubDependencies()))
+          .post('/tickets/TK-00001/conversations')
+          .send({});
+
+        expect(response.status).toBe(404);
+      });
   });

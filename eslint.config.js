@@ -11,8 +11,9 @@ export default tseslint.config(
       'coverage/**',
       'logs/**',
       'package.json',
-      'package-lock.json'
-    ] 
+      'package-lock.json',
+      'vitest.config.ts'
+    ]
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -37,6 +38,7 @@ export default tseslint.config(
     files: [
       'src/services/**/*.ts',
       'src/api/http/controllers/**/*.ts',
+      'src/api/http/routers/**/*.ts',
       'src/api/http/validators/**/*.ts',
       'src/api/http/middleware/**/*.ts',
       'src/api/sse/**/*.ts',
@@ -88,19 +90,19 @@ export default tseslint.config(
         {
           ObjectExpression: {
             multiline: true,
-            minProperties: 2 
+            minProperties: 2
           },
           ObjectPattern: {
             multiline: true,
-            minProperties: 2 
+            minProperties: 2
           },
           ImportDeclaration: {
             multiline: true,
-            minProperties: 3 
+            minProperties: 3
           },
           ExportDeclaration: {
             multiline: true,
-            minProperties: 3 
+            minProperties: 3
           },
         },
       ],
@@ -112,7 +114,7 @@ export default tseslint.config(
         'error',
         {
           multiline: true,
-          minItems: 2 
+          minItems: 2
         }
       ],
       indent: [

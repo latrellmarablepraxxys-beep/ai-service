@@ -1,10 +1,16 @@
 import { RunStatus } from '@enums/RunStatus.js';
 import { ThreadStatus } from '@enums/ThreadStatus.js';
+import { EscalationStatus } from '@enums/EscalationStatus.js';
 import type {
+  ConversationState,
+  CreateDecisionInput,
+  CreateEscalationInput,
   CreateMessageInput,
   CreateRunInput,
   CreateThreadInput,
+  Decision,
   EntityId,
+  EscalationRecord,
   Memory,
   Message,
   PaginatedResult,
@@ -14,6 +20,7 @@ import type {
   Thread,
   UpdateRunInput,
   UpdateThreadInput,
+  UpsertConversationStateInput,
   UpsertMemoryInput,
 } from '@interfaces/persistence.js';
 
@@ -40,6 +47,9 @@ export class FakePersistence implements Persistence {
   private messageRows: Message[] = [];
   private memoryRows: Memory[] = [];
   private runRows: Run[] = [];
+  private conversationStateRows: ConversationState[] = [];
+  private decisionRows: Decision[] = [];
+  private escalationRows: EscalationRecord[] = [];
   private sequence = 0;
 
   private nextId(prefix: string): EntityId {
@@ -178,6 +188,105 @@ export class FakePersistence implements Persistence {
     listByThread: (threadId: EntityId, params?: PaginationParams): Promise<PaginatedResult<Run>> =>
       Promise.resolve(paginate(
         this.runRows.filter((run) => run.threadId === threadId),
+        params,
+      )),
+  };
+
+  readonly conversationStates = {
+    findByThread: (threadId: EntityId): Promise<ConversationState | null> =>
+      Promise.resolve(this.conversationStateRows.find((state) => state.threadId === threadId) ?? null),
+
+    upsert: (input: UpsertConversationStateInput): Promise<ConversationState> => {
+      const existing = this.conversationStateRows.find((state) => state.threadId === input.threadId);
+      if (existing === undefined) {
+        const state: ConversationState = {
+          threadId: input.threadId,
+          stage: input.stage,
+          data: input.data ?? {},
+          createdAt: nowIso(),
+          updatedAt: nowIso(),
+        };
+        this.conversationStateRows.push(state);
+        return Promise.resolve(state);
+      }
+
+      existing.stage = input.stage;
+      existing.data = input.data ?? {};
+      existing.updatedAt = nowIso();
+      return Promise.resolve(existing);
+    },
+  };
+
+  readonly decisions = {
+    create: (input: CreateDecisionInput): Promise<Decision> => {
+      if (this.decisionRows.some((decision) => decision.runId === input.runId)) {
+        return Promise.reject(new Error(`decision for run "${input.runId}" already exists`));
+      }
+
+      const decision: Decision = {
+        id: this.nextId('decision'),
+        runId: input.runId,
+        threadId: input.threadId,
+        schemaVersion: input.schemaVersion,
+        intent: input.intent,
+        action: input.action,
+        confidence: input.confidence,
+        decision: input.decision,
+        validation: input.validation,
+        fallback: input.fallback,
+        createdAt: nowIso(),
+      };
+      this.decisionRows.push(decision);
+      return Promise.resolve(decision);
+    },
+
+    findByRunId: (runId: EntityId): Promise<Decision | null> =>
+      Promise.resolve(this.decisionRows.find((decision) => decision.runId === runId) ?? null),
+
+    listByThread: (threadId: EntityId, params?: PaginationParams): Promise<PaginatedResult<Decision>> =>
+      Promise.resolve(paginate(
+        this.decisionRows.filter((decision) => decision.threadId === threadId),
+        params,
+      )),
+  };
+
+  readonly escalations = {
+    create: (input: CreateEscalationInput): Promise<EscalationRecord> => {
+      const record: EscalationRecord = {
+        id: this.nextId('escalation'),
+        threadId: input.threadId,
+        runId: input.runId,
+        topicKey: input.topicKey,
+        detectedIntent: input.detectedIntent,
+        reason: input.reason,
+        summary: input.summary,
+        department: input.department,
+        priority: input.priority,
+        status: EscalationStatus.Pending,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+      };
+      this.escalationRows.push(record);
+      return Promise.resolve(record);
+    },
+
+    updateStatus: (id: EntityId, status: EscalationStatus): Promise<EscalationRecord> => {
+      const index = this.escalationRows.findIndex((record) => record.id === id);
+      const current = this.escalationRows[index];
+      if (current === undefined) return Promise.reject(new Error(`escalation "${id}" not found`));
+
+      const updated: EscalationRecord = {
+        ...current,
+        status,
+        updatedAt: nowIso(),
+      };
+      this.escalationRows[index] = updated;
+      return Promise.resolve(updated);
+    },
+
+    listByThread: (threadId: EntityId, params?: PaginationParams): Promise<PaginatedResult<EscalationRecord>> =>
+      Promise.resolve(paginate(
+        this.escalationRows.filter((record) => record.threadId === threadId),
         params,
       )),
   };

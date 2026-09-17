@@ -7,6 +7,18 @@ export type DomainErrorCode =
   | 'DOMAIN_RATE_LIMITED'
   | 'DOMAIN_NOT_FOUND';
 
+export type DomainHttpQueryValue = string | number | boolean | readonly string[] | undefined;
+
+export interface DomainHttpClient {
+  get(path: string, query?: Record<string, DomainHttpQueryValue>): Promise<unknown>;
+}
+
+export interface DomainHttpClientOptions {
+  baseUrl: string;
+  apiKey: string;
+  timeoutMs: number;
+}
+
 export type TicketRoute = 'ai' | 'agent' | 'queue';
 export type TicketStatus = 'open' | 'pending' | 'resolved' | 'closed' | 'escalated';
 export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';

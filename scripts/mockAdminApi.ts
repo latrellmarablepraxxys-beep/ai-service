@@ -6,7 +6,7 @@ import { logger } from '../src/utils/logger.js';
  * Runs the mock of the Laravel admin's `/api/v1` on its own port.
  *
  * Usage: `npm run mock:admin`
- * Point the service at it with `DOMAIN_API_URL=http://localhost:<port>/api`.
+ * Point the service at it with `DOMAIN_API_URL=http://localhost:<port>/api/v1`.
  */
 const start = (): void => {
   const app = createMockAdminApp();

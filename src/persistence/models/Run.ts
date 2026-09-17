@@ -36,6 +36,26 @@ export const runDocumentSchema = z
     error: z.string().optional(),
     startedAt: z.string().min(1),
     completedAt: z.string().optional(),
+    model: z.string().optional(),
+    promptKey: z.string().optional(),
+    promptVersion: z.number().int().optional(),
+    usage: z
+      .object({
+        promptTokens: z.number().int(),
+        completionTokens: z.number().int(),
+        totalTokens: z.number().int(),
+      })
+      .strip()
+      .optional(),
+    latencyMs: z.number().int().optional(),
+    knowledgeUsed: z
+      .array(z
+        .object({
+          key: z.string(),
+          version: z.number().int(),
+        })
+        .strip())
+      .optional(),
   })
   .strip();
 
@@ -53,6 +73,12 @@ export const toRun = (doc: WithId<RunDocument>): Run => {
     output: parsed.output ?? undefined,
     error: parsed.error ?? undefined,
     completedAt: parsed.completedAt ?? undefined,
+    model: parsed.model ?? undefined,
+    promptKey: parsed.promptKey ?? undefined,
+    promptVersion: parsed.promptVersion ?? undefined,
+    usage: parsed.usage ?? undefined,
+    latencyMs: parsed.latencyMs ?? undefined,
+    knowledgeUsed: parsed.knowledgeUsed ?? undefined,
   };
 };
 
